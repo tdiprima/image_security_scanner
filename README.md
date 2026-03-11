@@ -20,9 +20,8 @@ A Python scanner that runs three independent checks on every image:
   base64-encoded payloads.
 - **Metadata analysis** — inspects EXIF fields, PNG text chunks, and JPEG
   comment segments for embedded scripts, external URLs, and injection text.
-- **Pixel heuristics** — flags high Shannon entropy, LSB-plane anomalies
-  (classic steganography), low-contrast invisible text regions, and extreme
-  aspect ratios used to smuggle text strips.
+- **Pixel heuristics** — flags high Shannon entropy, low-contrast invisible
+  text regions, and extreme aspect ratios used to smuggle text strips.
 
 Each finding is rated **CRITICAL / HIGH / MEDIUM / LOW** and the scanner exits
 non-zero when issues are found, making it CI-friendly.
@@ -40,15 +39,11 @@ non-zero when issues are found, making it CI-friendly.
     Description : Instruction override attempt
     Evidence    : ignore all previous instructions
 
-  [HIGH] steganography
-    Description : LSB plane entropy near maximum — strong indicator of LSB steganography
-    Evidence    : lsb_entropy=0.9981
-
   [MEDIUM] suspicious_metadata
     Description : External URL embedded in metadata field 'Comment'
     Evidence    : https://evil.example.com/payload
 
-  Total findings: 3
+  Total findings: 2
 ============================================================
 ```
 
@@ -94,7 +89,7 @@ SCANNER_MAX_IMAGE_BYTES=10485760 \
 |---|---|---|
 | `SCANNER_LOG_LEVEL` | `INFO` | Python logging level |
 | `SCANNER_OCR_LANG` | `eng` | Tesseract language code |
-| `SCANNER_ENTROPY_THRESHOLD` | `7.5` | Max channel entropy before flagging |
+| `SCANNER_ENTROPY_THRESHOLD` | `7.9` | Max channel entropy before flagging |
 | `SCANNER_MAX_IMAGE_BYTES` | `52428800` | Max file size (50 MB) |
 
 Exit code `0` = clean. Exit code `1` = findings or error.

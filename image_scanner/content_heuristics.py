@@ -1,7 +1,6 @@
 """Heuristic checks on image pixel data for steganography and hidden content."""
 
 import logging
-import math
 
 import numpy as np
 from PIL import Image
@@ -47,27 +46,6 @@ def check_entropy(image: Image.Image) -> list[Finding]:
         logger.error({"event": "entropy_check_failed", "error": str(exc)})
     return findings
 
-
-def check_lsb_anomaly(image: Image.Image) -> list[Finding]:
-    """Detect LSB steganography by comparing LSB randomness to expected baseline."""
-    findings: list[Finding] = []
-    try:
-        rgb = image.convert("RGB")
-        arr = np.array(rgb, dtype=np.uint8)
-        lsb_plane = arr & 1  # extract least significant bits
-        lsb_entropy = _channel_entropy((lsb_plane[:, :, 0] * 255).astype(np.uint8))
-        # Natural images have LSB entropy well below 1.0; uniform random data approaches 1.0.
-        if lsb_entropy > 0.95:
-            findings.append(Finding(
-                category="steganography",
-                severity=Severity.HIGH,
-                description="LSB plane entropy near maximum — strong indicator of LSB steganography",
-                evidence=f"lsb_entropy={lsb_entropy:.4f}",
-            ))
-        logger.debug({"event": "lsb_check", "lsb_entropy": lsb_entropy})
-    except Exception as exc:
-        logger.error({"event": "lsb_check_failed", "error": str(exc)})
-    return findings
 
 
 def check_invisible_text(image: Image.Image) -> list[Finding]:
@@ -117,7 +95,6 @@ def run_all_heuristics(image: Image.Image) -> list[Finding]:
     """Run all pixel-level heuristic checks and return combined findings."""
     findings: list[Finding] = []
     findings.extend(check_entropy(image))
-    findings.extend(check_lsb_anomaly(image))
     findings.extend(check_invisible_text(image))
     findings.extend(check_aspect_ratio_anomaly(image))
     return findings

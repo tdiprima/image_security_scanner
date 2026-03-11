@@ -14,7 +14,7 @@ def get_ocr_lang() -> str:
 
 
 def get_entropy_threshold() -> float:
-    return float(os.environ.get("SCANNER_ENTROPY_THRESHOLD", "7.5"))
+    return float(os.environ.get("SCANNER_ENTROPY_THRESHOLD", "7.9"))
 
 
 def get_max_image_bytes() -> int:

@@ -1,6 +1,5 @@
 """Tests for prompt injection detection logic."""
 
-import pytest
 
 from image_scanner.models import Severity
 from image_scanner.prompt_injection import scan_for_prompt_injection
@@ -22,7 +21,7 @@ def test_clean_text_returns_no_findings():
 
 
 def test_empty_string_returns_no_findings():
-    assert scan_for_prompt_injection("") == []
+    assert not scan_for_prompt_injection("")
 
 
 # --- Critical patterns ---

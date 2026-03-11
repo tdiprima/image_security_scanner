@@ -72,7 +72,7 @@ def _read_png_metadata(image: Image.Image) -> dict[str, str]:
     """Return PNG tEXt / iTXt / zTXt chunk contents."""
     if image.format != "PNG":
         return {}
-    info = image.info or {}
+    info = image.info
     return {k: str(v) for k, v in info.items() if isinstance(v, (str, bytes, int, float))}
 
 

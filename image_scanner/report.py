@@ -41,11 +41,11 @@ def print_report(result: ScanResult, output_format: str = "text") -> None:
         return
 
     status = "CLEAN" if result.clean else "FLAGGED"
-    print(f"\n{'=' * 60}")
-    print(f"  Image Security Scan Report")
+    print("\n" + "=" * 60)
+    print("  Image Security Scan Report")
     print(f"  File   : {result.image_path}")
     print(f"  Status : {status}")
-    print(f"{'=' * 60}")
+    print("=" * 60)
 
     if result.error:
         print(f"  ERROR  : {result.error}")

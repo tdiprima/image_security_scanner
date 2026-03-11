@@ -1,14 +1,10 @@
 """Tests for pixel-level heuristic checks."""
 
 import numpy as np
-import pytest
 from PIL import Image
 
-from image_scanner.content_heuristics import (
-    check_aspect_ratio_anomaly,
-    check_entropy,
-    check_lsb_anomaly,
-)
+from image_scanner.content_heuristics import (check_aspect_ratio_anomaly,
+                                              check_entropy, check_lsb_anomaly)
 from image_scanner.models import Severity
 
 
@@ -18,8 +14,7 @@ def _solid_image(color=(128, 128, 128), size=(100, 100)) -> Image.Image:
 
 def _random_image(size=(100, 100)) -> Image.Image:
     rng = np.random.default_rng(seed=42)
-    arr = rng.integers(0, 256, (*size[::-1], 3), dtype=np.uint8)
-    return Image.fromarray(arr, "RGB")
+    return Image.fromarray(rng.integers(0, 256, (*size[::-1], 3), dtype=np.uint8), "RGB")
 
 
 def _lsb_stego_image(size=(200, 200)) -> Image.Image:

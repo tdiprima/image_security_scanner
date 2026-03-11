@@ -3,6 +3,7 @@
 import base64
 import logging
 import re
+from contextlib import suppress
 
 from image_scanner.models import Finding, Severity
 
@@ -57,7 +58,7 @@ def _check_base64_payloads(text: str) -> list[Finding]:
     """Decode any base64 blobs and recursively scan for injection patterns."""
     findings: list[Finding] = []
     for token in re.findall(r"[A-Za-z0-9+/]{20,}={0,2}", text):
-        try:
+        with suppress(Exception):
             decoded = base64.b64decode(token).decode("utf-8", errors="ignore")
             if any(re.search(p, _normalize(decoded)) for p, _ in _CRITICAL_PATTERNS + _HIGH_PATTERNS):
                 findings.append(Finding(
@@ -66,8 +67,6 @@ def _check_base64_payloads(text: str) -> list[Finding]:
                     description="Base64-encoded prompt injection payload",
                     evidence=f"token={token[:40]}… decoded={decoded[:80]}",
                 ))
-        except Exception:
-            pass
     return findings
 
 

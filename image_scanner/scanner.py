@@ -1,7 +1,7 @@
 """Core scan orchestration — loads an image and runs all checks."""
 
 import logging
-import os
+from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
 
@@ -19,9 +19,9 @@ _ALLOWED_FORMATS = {"PNG", "JPEG", "WEBP", "BMP", "TIFF", "GIF"}
 
 def _validate_image_path(image_path: str) -> str | None:
     """Return an error message if the path is invalid, else None."""
-    if not os.path.isfile(image_path):
+    if not Path(image_path).is_file():
         return f"File not found: {image_path}"
-    size = os.path.getsize(image_path)
+    size = Path(image_path).stat().st_size
     if size > get_max_image_bytes():
         return f"File too large: {size} bytes (limit {get_max_image_bytes()})"
     return None

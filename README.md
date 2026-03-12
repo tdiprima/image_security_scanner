@@ -4,15 +4,11 @@
 
 ![](Image-Security-Scanner.png)
 
-## Problem
-
 Images fed into AI pipelines can carry hidden threats — prompt injection text
 baked into pixels, malicious instructions buried in metadata, or steganographic
 payloads invisible to the naked eye. Standard content filters don't catch these.
 
-## Solution
-
-A Python scanner that runs three independent checks on every image:
+**Solution:** A Python scanner that runs three independent checks on every image:
 
 - **OCR + prompt injection** — extracts visible text via Tesseract and matches it
   against patterns for instruction overrides, persona hijacks, LLM control

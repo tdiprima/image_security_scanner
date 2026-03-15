@@ -65,14 +65,23 @@ uv sync
 ## Usage
 
 ```bash
-# Scan one or more images (text output)
+# Scan a single image (text output)
 uv run image-scanner photo.png
-
-# JSON output — pipe into jq, save to file, etc.
-uv run image-scanner photo.png --format json
 
 # Scan multiple files at once
 uv run image-scanner *.jpg
+
+# Scan all images in a directory
+uv run image-scanner /path/to/images/
+
+# Scan recursively into subdirectories
+uv run image-scanner /path/to/images/ --recursive
+
+# Mix files and directories
+uv run image-scanner photo.png /path/to/images/ --recursive
+
+# JSON output — pipe into jq, save to file, etc.
+uv run image-scanner /path/to/images/ --format json
 
 # Tune behaviour via environment variables
 SCANNER_LOG_LEVEL=DEBUG \
@@ -88,6 +97,6 @@ SCANNER_MAX_IMAGE_BYTES=10485760 \
 | `SCANNER_ENTROPY_THRESHOLD` | `7.9` | Max channel entropy before flagging |
 | `SCANNER_MAX_IMAGE_BYTES` | `52428800` | Max file size (50 MB) |
 
-Exit code `0` = clean. Exit code `1` = findings or error.
+Exit code `0` = clean. Exit code `1` = findings or error. Exit code `2` = no image files found.
 
 <br>

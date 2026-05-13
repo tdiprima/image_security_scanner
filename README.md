@@ -1,8 +1,4 @@
-<!--
 # Image Security Scanner
--->
-
-![](Image-Security-Scanner.png)
 
 Images fed into AI pipelines can carry hidden threats — prompt injection text
 baked into pixels, malicious instructions buried in metadata, or steganographic

@@ -95,4 +95,23 @@ SCANNER_MAX_IMAGE_BYTES=10485760 \
 
 Exit code `0` = clean. Exit code `1` = findings or error. Exit code `2` = no image files found.
 
+<!--
+No, it doesn't. The comment on scanner.py:71 mentions "LSB" in passing, but there's no actual LSB steganography check in the code.
+
+What content_heuristics.py actually does:
+
+1. Entropy check — Shannon entropy per RGB channel, flags if above a threshold. This is a coarse, indirect
+signal — high entropy could indicate steganographic payload, but it catches many benign images (photos,
+noise) and misses well-crafted LSB embedding that preserves statistical distributions.
+2. Invisible text — low-contrast region detection.
+3. Aspect ratio anomaly — extreme width/height ratios.
+
+A real LSB detection module would do something like chi-square analysis on LSB pairs, RS
+(Regular-Singular) analysis, or sample-pair analysis — these are statistical tests specifically designed
+to detect whether the least significant bits have been replaced with non-natural data. The current entropy
+check is too blunt for that.
+
+Add an LSB steganography detector
+-->
+
 <br>

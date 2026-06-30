@@ -68,7 +68,7 @@ def scan_image(image_path: str) -> ScanResult:
     for finding in analyze_metadata(image):
         result.add_finding(finding)
 
-    # 3 — Pixel-level heuristics (entropy, LSB steganography, invisible text, dimensions)
+    # 3 — Pixel-level heuristics (entropy, LSB, invisible text, dimensions)
     for finding in run_all_heuristics(image):
         result.add_finding(finding)
 

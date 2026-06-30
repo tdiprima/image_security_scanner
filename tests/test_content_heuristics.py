@@ -4,7 +4,8 @@ import numpy as np
 from PIL import Image
 
 from image_scanner.content_heuristics import (check_aspect_ratio_anomaly,
-                                              check_entropy, check_lsb_anomaly)
+                                              check_entropy)
+from image_scanner.lsb_detector import check_lsb_steganography
 from image_scanner.models import Severity
 
 
@@ -48,15 +49,15 @@ class TestEntropyCheck:
 
 class TestLSBAnomalyCheck:
     def test_solid_image_not_flagged(self):
-        findings = check_lsb_anomaly(_solid_image())
+        findings = check_lsb_steganography(_solid_image())
         assert findings == []
 
     def test_stego_image_flagged(self):
-        findings = check_lsb_anomaly(_lsb_stego_image())
+        findings = check_lsb_steganography(_lsb_stego_image())
         assert any(f.category == "steganography" for f in findings)
 
     def test_stego_finding_severity_is_high(self):
-        findings = check_lsb_anomaly(_lsb_stego_image())
+        findings = check_lsb_steganography(_lsb_stego_image())
         stego = [f for f in findings if f.category == "steganography"]
         assert all(f.severity == Severity.HIGH for f in stego)
 

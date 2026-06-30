@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 
 from image_scanner.config import get_entropy_threshold
+from image_scanner.lsb_detector import check_lsb_steganography
 from image_scanner.models import Finding, Severity
 
 logger = logging.getLogger(__name__)
@@ -95,6 +96,7 @@ def run_all_heuristics(image: Image.Image) -> list[Finding]:
     """Run all pixel-level heuristic checks and return combined findings."""
     findings: list[Finding] = []
     findings.extend(check_entropy(image))
+    findings.extend(check_lsb_steganography(image))
     findings.extend(check_invisible_text(image))
     findings.extend(check_aspect_ratio_anomaly(image))
     return findings

@@ -12,7 +12,7 @@ from image_scanner.models import Finding, Severity
 logger = logging.getLogger(__name__)
 
 _CHANNEL_NAMES = ("red", "green", "blue")
-_MIN_POPULATED_PAIRS = 10
+_MIN_POPULATED_PAIRS = 5
 _MIN_RS_GROUPS = 100
 _RS_GROUP_SIZE = 4
 
@@ -61,6 +61,14 @@ def _rs_embedding_rate(channel: np.ndarray) -> float:
 
     groups = flat[: n_groups * _RS_GROUP_SIZE].reshape(-1, _RS_GROUP_SIZE)
     smoothness_orig = _rs_discrimination(groups)
+
+    # Skip flat groups (all pixels identical) — uninformative and cause false positives
+    informative = smoothness_orig > 0
+    if np.sum(informative) < _MIN_RS_GROUPS:
+        return 0.0
+
+    groups = groups[informative]
+    smoothness_orig = smoothness_orig[informative]
 
     # F1 flip (swap within PoV pairs: 0<->1, 2<->3, ...) on odd-indexed columns
     groups_f1 = groups.copy()

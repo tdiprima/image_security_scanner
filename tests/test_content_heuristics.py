@@ -4,7 +4,8 @@ import numpy as np
 from PIL import Image
 
 from image_scanner.content_heuristics import (check_aspect_ratio_anomaly,
-                                              check_entropy, check_lsb_anomaly)
+                                              check_entropy)
+from image_scanner.lsb_detector import check_lsb_steganography
 from image_scanner.models import Severity
 
 
@@ -17,14 +18,21 @@ def _random_image(size=(100, 100)) -> Image.Image:
     return Image.fromarray(rng.integers(0, 256, (*size[::-1], 3), dtype=np.uint8), "RGB")
 
 
-def _lsb_stego_image(size=(200, 200)) -> Image.Image:
-    """Create an image where LSB plane is pure random noise."""
-    rng = np.random.default_rng(seed=7)
-    arr = rng.integers(0, 256, (*size[::-1], 3), dtype=np.uint8)
-    # Force LSB to maximum-entropy random values
-    lsb_noise = rng.integers(0, 2, arr.shape, dtype=np.uint8)
-    arr = (arr & 0xFE) | lsb_noise
+def _natural_image(size=(200, 200), seed=7) -> Image.Image:
+    """Smooth gradient plus mild noise — mimics natural image statistics."""
+    rng = np.random.default_rng(seed=seed)
+    y, x = np.mgrid[0:size[1], 0:size[0]]
+    base = np.stack([x * 0.6 + 30, y * 0.6 + 40, (x + y) * 0.3 + 50], axis=-1)
+    arr = np.clip(base + rng.normal(0, 4, base.shape), 0, 255).astype(np.uint8)
     return Image.fromarray(arr, "RGB")
+
+
+def _lsb_stego_image(size=(200, 200)) -> Image.Image:
+    """Natural-looking image whose LSB plane has been replaced with random bits."""
+    rng = np.random.default_rng(seed=11)
+    arr = np.array(_natural_image(size), dtype=np.uint8)
+    lsb_noise = rng.integers(0, 2, arr.shape, dtype=np.uint8)
+    return Image.fromarray((arr & 0xFE) | lsb_noise, "RGB")
 
 
 # --- Entropy ---
@@ -48,15 +56,19 @@ class TestEntropyCheck:
 
 class TestLSBAnomalyCheck:
     def test_solid_image_not_flagged(self):
-        findings = check_lsb_anomaly(_solid_image())
+        findings = check_lsb_steganography(_solid_image())
+        assert findings == []
+
+    def test_natural_image_not_flagged(self):
+        findings = check_lsb_steganography(_natural_image())
         assert findings == []
 
     def test_stego_image_flagged(self):
-        findings = check_lsb_anomaly(_lsb_stego_image())
+        findings = check_lsb_steganography(_lsb_stego_image())
         assert any(f.category == "steganography" for f in findings)
 
     def test_stego_finding_severity_is_high(self):
-        findings = check_lsb_anomaly(_lsb_stego_image())
+        findings = check_lsb_steganography(_lsb_stego_image())
         stego = [f for f in findings if f.category == "steganography"]
         assert all(f.severity == Severity.HIGH for f in stego)
 

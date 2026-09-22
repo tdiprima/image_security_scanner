@@ -52,17 +52,37 @@ def _scan_string_value(key: str, value: str) -> list[Finding]:
 
 
 def _read_exif(image: Image.Image) -> dict[str, str]:
-    """Return a flat dict of EXIF tag names to string values."""
+    """Return a flat dict of EXIF tag names to string values.
+
+    Uses the public ``getexif()`` API (works for JPEG, TIFF, PNG, WEBP) and walks
+    the Exif, GPS and Interop sub-IFDs so nothing string-bearing is skipped.
+    """
     exif_data: dict[str, str] = {}
     try:
-        raw_exif = image._getexif()  # type: ignore[attr-defined]
-        if not raw_exif:
+        from PIL.ExifTags import GPSTAGS, IFD, TAGS
+
+        exif = image.getexif()
+        if not exif:
             return exif_data
-        from PIL.ExifTags import TAGS
-        for tag_id, value in raw_exif.items():
-            tag_name = TAGS.get(tag_id, str(tag_id))
-            if isinstance(value, (str, bytes)):
-                exif_data[tag_name] = value.decode("utf-8", errors="replace") if isinstance(value, bytes) else value
+
+        def _collect(items, names: dict, prefix: str = "") -> None:
+            for tag_id, value in items:
+                tag_name = names.get(tag_id, str(tag_id))
+                if isinstance(value, bytes):
+                    value = value.decode("utf-8", errors="replace")
+                if isinstance(value, str):
+                    exif_data[f"{prefix}{tag_name}"] = value
+
+        _collect(exif.items(), TAGS)
+        for ifd, names, prefix in (
+            (IFD.Exif, TAGS, "Exif."),
+            (IFD.GPSInfo, GPSTAGS, "GPS."),
+            (IFD.Interop, TAGS, "Interop."),
+        ):
+            try:
+                _collect(exif.get_ifd(ifd).items(), names, prefix)
+            except Exception as exc:  # malformed sub-IFD — skip, keep the rest
+                logger.debug({"event": "exif_ifd_read_failed", "ifd": ifd.name, "error": str(exc)})
     except Exception as exc:
         logger.debug({"event": "exif_read_failed", "error": str(exc)})
     return exif_data

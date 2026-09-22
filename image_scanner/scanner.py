@@ -9,7 +9,7 @@ from image_scanner.config import get_max_image_bytes
 from image_scanner.content_heuristics import run_all_heuristics
 from image_scanner.metadata_analyzer import analyze_metadata
 from image_scanner.models import Finding, ScanResult, Severity
-from image_scanner.ocr import extract_text
+from image_scanner.ocr import OCRError, extract_text
 from image_scanner.prompt_injection import scan_for_prompt_injection
 
 logger = logging.getLogger(__name__)
@@ -59,7 +59,12 @@ def scan_image(image_path: str) -> ScanResult:
     logger.info({"event": "scan_start", "image_path": image_path, "format": image.format})
 
     # 1 — OCR text extraction + prompt injection scan
-    extracted_text = extract_text(image)
+    try:
+        extracted_text = extract_text(image)
+    except OCRError as exc:
+        result.error = f"OCR failed: {exc}"
+        logger.warning({"event": "ocr_error", "image_path": image_path, "error": str(exc)})
+        extracted_text = ""
     result.extracted_text = extracted_text
     for finding in scan_for_prompt_injection(extracted_text):
         result.add_finding(finding)
@@ -68,7 +73,7 @@ def scan_image(image_path: str) -> ScanResult:
     for finding in analyze_metadata(image):
         result.add_finding(finding)
 
-    # 3 — Pixel-level heuristics (entropy, LSB, invisible text, dimensions)
+    # 3 — Pixel-level heuristics (entropy, LSB steganography, invisible text, dimensions)
     for finding in run_all_heuristics(image):
         result.add_finding(finding)
 

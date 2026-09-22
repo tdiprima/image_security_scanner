@@ -19,3 +19,11 @@ def get_entropy_threshold() -> float:
 
 def get_max_image_bytes() -> int:
     return int(os.environ.get("SCANNER_MAX_IMAGE_BYTES", str(50 * 1024 * 1024)))  # 50 MB
+
+
+def get_chi_square_threshold() -> float:
+    return float(os.environ.get("SCANNER_CHI_SQUARE_THRESHOLD", "0.95"))
+
+
+def get_rs_threshold() -> float:
+    return float(os.environ.get("SCANNER_RS_THRESHOLD", "0.05"))

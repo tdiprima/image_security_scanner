@@ -16,17 +16,25 @@ except ImportError:
     logger.warning({"event": "ocr_unavailable", "reason": "pytesseract not installed"})
 
 
+class OCRError(Exception):
+    """Raised when OCR cannot be performed on an image."""
+
+
 def extract_text(image: Image.Image) -> str:
-    """Return all text found in the image, or empty string if OCR unavailable."""
+    """Return all text found in the image.
+
+    Raises OCRError if pytesseract is unavailable or extraction fails, so callers
+    never mistake a failed OCR pass for an image with no text.
+    """
     if not _OCR_AVAILABLE:
-        return ""
+        raise OCRError("pytesseract not installed")
     try:
         text = pytesseract.image_to_string(image, lang=get_ocr_lang())
-        logger.debug({"event": "ocr_complete", "chars_extracted": len(text)})
-        return text
     except Exception as exc:
         logger.error({"event": "ocr_failed", "error": str(exc)})
-        return ""
+        raise OCRError(str(exc)) from exc
+    logger.debug({"event": "ocr_complete", "chars_extracted": len(text)})
+    return text
 
 
 def extract_text_with_confidence(image: Image.Image) -> list[dict]:

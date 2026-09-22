@@ -6,7 +6,7 @@ import struct
 
 from PIL import Image
 
-from image_scanner.models import Finding, Severity
+from image_scanner.models import DetectorError, Finding, Severity
 from image_scanner.prompt_injection import scan_for_prompt_injection
 
 logger = logging.getLogger(__name__)
@@ -56,6 +56,9 @@ def _read_exif(image: Image.Image) -> dict[str, str]:
 
     Uses the public ``getexif()`` API (works for JPEG, TIFF, PNG, WEBP) and walks
     the Exif, GPS and Interop sub-IFDs so nothing string-bearing is skipped.
+
+    Raises DetectorError if any IFD cannot be read — a partially read EXIF block
+    must not be mistaken for a fully inspected one.
     """
     exif_data: dict[str, str] = {}
     try:
@@ -81,10 +84,14 @@ def _read_exif(image: Image.Image) -> dict[str, str]:
         ):
             try:
                 _collect(exif.get_ifd(ifd).items(), names, prefix)
-            except Exception as exc:  # malformed sub-IFD — skip, keep the rest
-                logger.debug({"event": "exif_ifd_read_failed", "ifd": ifd.name, "error": str(exc)})
+            except Exception as exc:
+                logger.warning({"event": "exif_ifd_read_failed", "ifd": ifd.name, "error": str(exc)})
+                raise DetectorError(f"EXIF {ifd.name} IFD unreadable: {exc}") from exc
+    except DetectorError:
+        raise
     except Exception as exc:
-        logger.debug({"event": "exif_read_failed", "error": str(exc)})
+        logger.warning({"event": "exif_read_failed", "error": str(exc)})
+        raise DetectorError(f"EXIF unreadable: {exc}") from exc
     return exif_data
 
 
@@ -119,12 +126,16 @@ def _read_jpeg_comments(image: Image.Image) -> dict[str, str]:
             segment_len = struct.unpack(">H", data[offset:offset + 2])[0]
             offset += segment_len
     except Exception as exc:
-        logger.debug({"event": "jpeg_comment_read_failed", "error": str(exc)})
+        logger.warning({"event": "jpeg_comment_read_failed", "error": str(exc)})
+        raise DetectorError(f"JPEG comment segments unreadable: {exc}") from exc
     return comments
 
 
 def analyze_metadata(image: Image.Image) -> list[Finding]:
-    """Return all metadata-related findings for the image."""
+    """Return all metadata-related findings for the image.
+
+    Raises DetectorError if any metadata source cannot be fully read.
+    """
     findings: list[Finding] = []
     all_metadata: dict[str, str] = {}
 

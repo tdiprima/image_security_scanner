@@ -7,7 +7,7 @@ from PIL import Image
 from scipy.stats import chi2
 
 from image_scanner.config import get_chi_square_threshold, get_rs_threshold
-from image_scanner.models import Finding, Severity
+from image_scanner.models import DetectorError, Finding, Severity
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +92,10 @@ def _rs_embedding_rate(channel: np.ndarray) -> float:
 
 
 def check_lsb_steganography(image: Image.Image) -> list[Finding]:
-    """Detect LSB steganography using chi-square and RS analysis."""
+    """Detect LSB steganography using chi-square and RS analysis.
+
+    Raises DetectorError if the analysis cannot complete.
+    """
     findings: list[Finding] = []
     chi_threshold = get_chi_square_threshold()
     rs_threshold = get_rs_threshold()
@@ -146,5 +149,6 @@ def check_lsb_steganography(image: Image.Image) -> list[Finding]:
             ))
     except Exception as exc:
         logger.error({"event": "lsb_check_failed", "error": str(exc)})
+        raise DetectorError(f"LSB check failed: {exc}") from exc
 
     return findings

@@ -94,6 +94,9 @@ SCANNER_MAX_IMAGE_BYTES=10485760 \
 | `SCANNER_CHI_SQUARE_THRESHOLD` | `0.95` | Chi-square PoV p-value above which LSB embedding is flagged |
 | `SCANNER_RS_THRESHOLD` | `0.05` | RS-analysis divergence above which LSB embedding is flagged |
 | `SCANNER_MAX_IMAGE_BYTES` | `52428800` | Max file size (50 MB) |
+| `SCANNER_MAX_IMAGE_PIXELS` | `25000000` | Max decoded pixels per frame (25 MP); larger images are reported incomplete |
+| `SCANNER_MAX_FRAMES` | `64` | Max frames scanned in GIF/TIFF/WebP; extra frames are reported incomplete |
+| `SCANNER_OCR_TIMEOUT_SECONDS` | `30` | Tesseract timeout per frame; a timeout is reported incomplete |
 
 Exit code `0` = clean. Exit code `1` = findings or error. Exit code `2` = no image files found.
 
